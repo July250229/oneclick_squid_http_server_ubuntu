@@ -18,12 +18,30 @@ vspibuild=2017 # SPI build number
 vbranch=Stable # SPI build branch
 vsysarch=$(getconf LONG_BIT) # System architecture
 
-# Function for iptables rules (CentOS 7, Debian, Ubuntu, Fedora)
-firew2 ()	{
-	# Opening default Squid port 3128 for clients to connect
-	iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
-	# Saving firewall rules
-	iptables-save
+
+check_ipaddr()
+{
+echo $1|grep "^[0-9]\{1,3\}\.\([0-9]\{1,3\}\.\)\{2\}[0-9]\{1,3\}$" > /dev/null;
+if [ $? -ne 0 ]
+then
+#echo "IP地址必须全部为数字"
+return 1
+fi
+ipaddr=$1
+a=`echo $ipaddr|awk -F . '{print $1}'`
+b=`echo $ipaddr|awk -F . '{print $2}'`
+c=`echo $ipaddr|awk -F . '{print $3}'`
+d=`echo $ipaddr|awk -F . '{print $4}'`
+for num in $a $b $c $d
+do
+if [ $num -gt 255 ] || [ $num -lt 0 ]
+then
+#echo $ipaddr "中，字段"$num"错误"
+return 1
+fi
+done
+#echo $ipaddr "地址合法"
+return 0
 }
 
 
@@ -37,8 +55,11 @@ ubt ()	{
 	read -e -p "Your desired server port: " port
 	# Asking user to set a username via read and writing it into $usrn
 	read -e -p "Your desired username: " usrn
+	read -e -p "Your desired passwd: " password
 	# Creating user with username from $usrn and asking user to set a password
 	htpasswd -c /etc/squid/passwd $usrn
+	send $password"\n"
+	send $password"\n"
 	# Downloading Squid configuration
 	echo 'http_port' $port > /etc/squid/squid.conf
 	echo 'cache deny all
@@ -111,8 +132,25 @@ request_header_access All deny all' >> /etc/squid/squid.conf
 	touch /etc/squid/blacklist.acl	
 	# Restarting Squid and enabling its service
 	service squid restart && update-rc.d squid defaults
-	# Running function firew2
-	firew2
+	# Opening default Squid port 3128 for clients to connect
+	iptables -I INPUT -p tcp --dport $port -j ACCEPT
+	# Saving firewall rules
+	iptables-save
+	# output
+	host=ns1.dnspod.net
+	port=16666
+	ip=`cat</dev/tcp/$host/$port`
+
+	check_ipaddr "$ip"
+
+	if [ "$?"x = "0"x ]; then
+	echo "外网IP地址：$ip"
+	else
+	echo "获取IP地址失败！"
+	fi
+
+	echo "搭建成功"
+	echo $ip:$port:$usrn:$password
 }
 
 
