@@ -56,11 +56,8 @@ ubt ()	{
 	read -e -p "Your desired server port: " port
 	# Asking user to set a username via read and writing it into $usrn
 	read -e -p "Your desired username: " usrn
-	read -e -p "Your desired passwd: " password
 	# Creating user with username from $usrn and asking user to set a password
 	htpasswd -c /etc/squid/passwd $usrn
-	send $password"\n"
-	send $password"\n"
 	# Downloading Squid configuration
 	echo 'http_port' $port > /etc/squid/squid.conf
 	echo 'cache deny all
@@ -137,21 +134,6 @@ request_header_access All deny all' >> /etc/squid/squid.conf
 	iptables -I INPUT -p tcp --dport $port -j ACCEPT
 	# Saving firewall rules
 	iptables-save
-	# output
-	host=ns1.dnspod.net
-	port=16666
-	ip=`cat</dev/tcp/$host/$port`
-
-	check_ipaddr "$ip"
-
-	if [ "$?"x = "0"x ]; then
-	echo "外网IP地址：$ip"
-	else
-	echo "获取IP地址失败！"
-	fi
-
-	echo "搭建成功"
-	echo $ip:$port:$usrn:$password
 }
 
 
