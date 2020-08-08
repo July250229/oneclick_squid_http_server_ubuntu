@@ -8,5 +8,6 @@ I fixed it on ubuntu 16.04
 
 
 ```
+wget https://raw.githubusercontent.com/ZaneCode6574/oneclick_squid_http_server_ubuntu/master/squid.sh && bash squid.sh
 
 ```
